@@ -15,17 +15,17 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ---------------------------------------------------------------- styles
 STYLE = {
-    # evidence levels (architecture) and audit statuses (feature map)
-    "C":  {"stroke": "#5b8cff", "dash": "",    "fill": "#e3ebff", "name": "Confirmed on site"},
-    "I":  {"stroke": "#a98bff", "dash": "7 4", "fill": "#eee8ff", "name": "Inference"},
-    "T":  {"stroke": "#f0b45b", "dash": "9 3", "fill": "#fdf1dc", "name": "Team-stated (not visible on site)"},
-    "U":  {"stroke": "#6b7390", "dash": "2 4", "fill": "#eef0f6", "name": "Unknown"},
-    "ins": {"stroke": "#3ecf8e", "dash": "",    "fill": "#dff5ea", "name": "Inspected (screenshot / text)"},
-    "lnk": {"stroke": "#6b7390", "dash": "4 4", "fill": "#eef0f6", "name": "Linked only (not captured)"},
-    "res": {"stroke": "#ef6b6b", "dash": "",    "fill": "#fde6e6", "name": "Restricted for test role"},
-    "hub": {"stroke": "#7c6cff", "dash": "",    "fill": "#e4defc", "name": ""},
-    "step": {"stroke": "#5b8cff", "dash": "",   "fill": "#e3ebff", "name": "Step"},
-    "alt": {"stroke": "#a98bff", "dash": "",    "fill": "#eee8ff", "name": "Alternative path"},
+    # evidence levels (architecture) and audit statuses (feature map) -> Archify semantic hues
+    "C":  {"stroke": "#0891b2", "dash": "",    "fill": "#def8fd", "name": "Confirmed on site"},
+    "I":  {"stroke": "#7c3aed", "dash": "7 4", "fill": "#ede8fd", "name": "Inference"},
+    "T":  {"stroke": "#d97706", "dash": "9 3", "fill": "#fef3d8", "name": "Team-stated (not visible on site)"},
+    "U":  {"stroke": "#64748b", "dash": "2 4", "fill": "#eceef2", "name": "Unknown"},
+    "ins": {"stroke": "#059669", "dash": "",    "fill": "#daf7ed", "name": "Inspected (screenshot / text)"},
+    "lnk": {"stroke": "#64748b", "dash": "4 4", "fill": "#eceef2", "name": "Linked only (not captured)"},
+    "res": {"stroke": "#e11d48", "dash": "",    "fill": "#feeaed", "name": "Restricted for test role"},
+    "hub": {"stroke": "#111827", "dash": "",    "fill": "#f1f2f5", "name": ""},
+    "step": {"stroke": "#0891b2", "dash": "",   "fill": "#def8fd", "name": "Step"},
+    "alt": {"stroke": "#7c3aed", "dash": "",    "fill": "#ede8fd", "name": "Alternative path"},
 }
 
 # ------------------------------------------------------- architecture spec
@@ -186,34 +186,34 @@ def svg_for(d):
     o = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" font-family="Inter, Segoe UI, system-ui, sans-serif">',
          f'<title>{escape(d["title"])}</title>',
          '<defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">'
-         '<path d="M0,0 L10,5 L0,10 z" fill="#6b7390"/></marker></defs>',
-         f'<rect width="{W}" height="{H}" fill="#f7f9fd"/>']
+         '<path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>',
+         f'<rect width="{W}" height="{H}" fill="#ffffff"/>']
     for g in d["groups"]:
-        o.append(f'<g class="group"><rect x="{g["x"]}" y="{g["y"]}" width="{g["w"]}" height="{g["h"]}" rx="14" fill="#eef2fb" stroke="#d5dcec"/>'
-                 f'<text x="{g["x"]+14}" y="{g["y"]+18}" font-size="12" fill="#5a6485" letter-spacing="1">{escape(g["label"].upper())}</text></g>')
+        o.append(f'<g class="group"><rect x="{g["x"]}" y="{g["y"]}" width="{g["w"]}" height="{g["h"]}" rx="14" fill="#f6f7f9" stroke="#e5e7eb"/>'
+                 f'<text x="{g["x"]+14}" y="{g["y"]+18}" font-size="12" fill="#5b6474" letter-spacing="1">{escape(g["label"].upper())}</text></g>')
     for e in d["edges"]:
         a, b = nodes[e[0]], nodes[e[1]]
         x1, y1 = clip(a["x"], a["y"], a["w"], a["h"], b["x"] + b["w"] / 2, b["y"] + b["h"] / 2)
         x2, y2 = clip(b["x"], b["y"], b["w"], b["h"], a["x"] + a["w"] / 2, a["y"] + a["h"] / 2)
         lv = e[3] if len(e) > 3 and e[3] else ""
         dash = f' stroke-dasharray="{STYLE[lv]["dash"]}"' if lv else ""
-        o.append(f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" stroke="#6b7390" stroke-width="1.5"{dash} marker-end="url(#arr)"/>')
+        o.append(f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" stroke="#94a3b8" stroke-width="1.5"{dash} marker-end="url(#arr)"/>')
         if e[2]:
             mx, my = (x1 + x2) / 2, (y1 + y2) / 2
-            o.append(f'<text x="{mx:.1f}" y="{my-5:.1f}" font-size="11" fill="#3a4466" text-anchor="middle" paint-order="stroke" stroke="#f7f9fd" stroke-width="4">{escape(e[2])}</text>')
+            o.append(f'<text x="{mx:.1f}" y="{my-5:.1f}" font-size="11" fill="#5b6474" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="4">{escape(e[2])}</text>')
     for n in d["nodes"]:
         s = STYLE[n["lv"]]
         dash = f' stroke-dasharray="{s["dash"]}"' if s["dash"] else ""
         cx = n["x"] + n["w"] / 2
         o.append(f'<g id="{n["id"]}"><rect x="{n["x"]}" y="{n["y"]}" width="{n["w"]}" height="{n["h"]}" rx="10" fill="{s["fill"]}" stroke="{s["stroke"]}" stroke-width="1.8"{dash}/>'
-                 f'<text x="{cx}" y="{n["y"]+n["h"]/2-3}" font-size="15" font-weight="600" fill="#151b30" text-anchor="middle">{escape(n["label"])}</text>'
-                 f'<text x="{cx}" y="{n["y"]+n["h"]/2+15}" font-size="11.5" fill="#4d5778" text-anchor="middle">{escape(n["sub"])}</text></g>')
+                 f'<text x="{cx}" y="{n["y"]+n["h"]/2-3}" font-size="15" font-weight="600" fill="#111827" text-anchor="middle">{escape(n["label"])}</text>'
+                 f'<text x="{cx}" y="{n["y"]+n["h"]/2+15}" font-size="11.5" fill="#5b6474" text-anchor="middle">{escape(n["sub"])}</text></g>')
     lx = 20
     for k in d["legend"]:
         s = STYLE[k]
         dash = f' stroke-dasharray="{s["dash"]}"' if s["dash"] else ""
         o.append(f'<rect x="{lx}" y="{d["h"]+16}" width="26" height="16" rx="4" fill="{s["fill"]}" stroke="{s["stroke"]}" stroke-width="1.8"{dash}/>'
-                 f'<text x="{lx+34}" y="{d["h"]+29}" font-size="12.5" fill="#3a4466">{escape(s["name"])}</text>')
+                 f'<text x="{lx+34}" y="{d["h"]+29}" font-size="12.5" fill="#5b6474">{escape(s["name"])}</text>')
         lx += 46 + len(s["name"]) * 7.2
     o.append('</svg>')
     return "\n".join(o)

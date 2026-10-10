@@ -175,22 +175,22 @@
     const svg = el("svg", { viewBox: "0 0 " + spec.w + " " + (spec.h + 50), role: "img", "aria-label": spec.title });
     const defs = el("defs", {}, svg);
     const mk = el("marker", { id: "arr-" + spec.id, viewBox: "0 0 10 10", refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: "auto-start-reverse" }, defs);
-    el("path", { d: "M0,0 L10,5 L0,10 z", fill: "#6b7390" }, mk);
+    el("path", { d: "M0,0 L10,5 L0,10 z", fill: "#94a3b8" }, mk);
     const gGroups = el("g", {}, svg), gEdges = el("g", {}, svg), gNodes = el("g", {}, svg), gLegend = el("g", {}, svg);
 
     spec.groups.forEach((g) => {
-      el("rect", { x: g.x, y: g.y, width: g.w, height: g.h, rx: 14, fill: "#eef2fb", stroke: "#d5dcec" }, gGroups);
-      const t = el("text", { x: g.x + 14, y: g.y + 18, "font-size": 12, fill: "#5a6485", "letter-spacing": 1 }, gGroups);
+      el("rect", { x: g.x, y: g.y, width: g.w, height: g.h, rx: 14, fill: "#f6f7f9", stroke: "#e5e7eb" }, gGroups);
+      const t = el("text", { x: g.x + 14, y: g.y + 18, "font-size": 12, fill: "#5b6474", "letter-spacing": 1 }, gGroups);
       t.textContent = g.label.toUpperCase();
     });
 
     const edgeEls = spec.edges.map((e) => {
       const lv = e[3] || "";
-      const line = el("line", { stroke: "#6b7390", "stroke-width": 1.5, "marker-end": "url(#arr-" + spec.id + ")" }, gEdges);
+      const line = el("line", { stroke: "#94a3b8", "stroke-width": 1.5, "marker-end": "url(#arr-" + spec.id + ")" }, gEdges);
       if (lv && STYLE[lv]) line.setAttribute("stroke-dasharray", STYLE[lv].dash);
       let label = null;
       if (e[2]) {
-        label = el("text", { "font-size": 11, fill: "#3a4466", "text-anchor": "middle", "paint-order": "stroke", stroke: "#f7f9fd", "stroke-width": 4 }, gEdges);
+        label = el("text", { "font-size": 11, fill: "#5b6474", "text-anchor": "middle", "paint-order": "stroke", stroke: "#ffffff", "stroke-width": 4 }, gEdges);
         label.textContent = e[2];
       }
       return { e, line, label };
@@ -223,9 +223,9 @@
       const g = el("g", { class: "dnode", tabindex: 0, role: "button", "aria-label": n.label + ": " + n.sub }, gNodes);
       const r = el("rect", { width: n.w, height: n.h, rx: 10, fill: s.fill, stroke: s.stroke, "stroke-width": 1.8 }, g);
       if (s.dash) r.setAttribute("stroke-dasharray", s.dash);
-      const t1 = el("text", { x: n.w / 2, y: n.h / 2 - 3, "font-size": 15, "font-weight": 600, fill: "#151b30", "text-anchor": "middle" }, g);
+      const t1 = el("text", { x: n.w / 2, y: n.h / 2 - 3, "font-size": 15, "font-weight": 650, fill: "#111827", "text-anchor": "middle" }, g);
       t1.textContent = n.label;
-      const t2 = el("text", { x: n.w / 2, y: n.h / 2 + 15, "font-size": 11.5, fill: "#4d5778", "text-anchor": "middle" }, g);
+      const t2 = el("text", { x: n.w / 2, y: n.h / 2 + 15, "font-size": 11.5, fill: "#5b6474", "text-anchor": "middle" }, g);
       t2.textContent = n.sub;
       const place = () => g.setAttribute("transform", "translate(" + n.x + "," + n.y + ")");
       place(); n._place = place;
@@ -272,7 +272,7 @@
       const s = STYLE[k];
       const r = el("rect", { x: lx, y: spec.h + 16, width: 26, height: 16, rx: 4, fill: s.fill, stroke: s.stroke, "stroke-width": 1.8 }, gLegend);
       if (s.dash) r.setAttribute("stroke-dasharray", s.dash);
-      const t = el("text", { x: lx + 34, y: spec.h + 29, "font-size": 12.5, fill: "#3a4466" }, gLegend);
+      const t = el("text", { x: lx + 34, y: spec.h + 29, "font-size": 12.5, fill: "#5b6474" }, gLegend);
       t.textContent = s.name;
       lx += 46 + s.name.length * 7.2;
     });

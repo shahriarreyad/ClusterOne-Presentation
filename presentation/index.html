@@ -35,7 +35,7 @@
   <h2>Ordinary lab PCs, working as one GPU cloud</h2>
   <p class="lede">ClusterOne pools the lab's existing Windows PCs into a shared, self-managing compute service. Users send code from a browser, terminal or Python. The master picks a free GPU, runs the job and returns the results; work too big for one PC is split across several.</p>
   <div class="body grid2">
-    <div class="grid3" style="align-content:start">
+    <div class="grid3">
       <div class="card"><div class="stat">7 <small>PCs registered</small></div><p>5 online, 2 offline at capture time</p></div>
       <div class="card"><div class="stat">5 <small>GPUs</small></div><p>28 GB VRAM pooled (RTX 3050 ×4, 3050 Laptop, 2050; 5060 Ti offline)</p></div>
       <div class="card"><div class="stat">84 <small>cores</small></div><p>71 GB RAM across online PCs</p></div>
@@ -286,7 +286,7 @@ clusterone submit . --gpus 1 --nodes 2 -f -- python train.py <span class="c"># D
     <div class="diagram" data-diagram="arch" data-panel="arch-info" data-svg="../assets/diagrams/system-architecture.svg"></div>
     <div class="info">
       <div class="panel" id="arch-info"><h3>Click a component</h3><p>Each box shows its evidence and source. Drag boxes to rearrange; <b>Reset layout</b> restores the original.</p></div>
-      <div class="hint"><b>Solid blue:</b> stated on the site · <b>purple dashed:</b> inference · <b>amber dashed:</b> team notes, not visible on the site · <b>grey dotted:</b> unknown.<br><br>Keyboard: Tab to a box, Enter for details, Alt+arrows to move it.</div>
+      <div class="hint"><b>Solid cyan:</b> stated on the site · <b>purple dashed:</b> inference · <b>amber dashed:</b> team notes, not visible on the site · <b>grey dotted:</b> unknown.<br><br>Keyboard: Tab to a box, Enter for details, Alt+arrows to move it.</div>
     </div>
   </div>
   <div class="src">Sources: Showcase "Architecture", Guide (endpoints, env vars, multi-PC), Mounts manual, screenshot 02 · research/architecture-notes.md · <b>assets/diagrams/system-architecture.svg</b></div>
