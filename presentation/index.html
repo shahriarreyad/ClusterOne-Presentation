@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ClusterOne Audit</title>
+<meta name="description" content="Evidence-based audit and walkthrough of the ClusterOne GPU cluster console.">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<div id="viewport">
+<main id="deck" aria-live="polite">
+
+<!-- 1 · COVER -->
+<section class="slide cover" data-title="Cover">
+  <div class="logo">C1</div>
+  <h1><span>ClusterOne</span></h1>
+  <p class="sub">GPU Cluster Management Platform: website audit &amp; system walkthrough</p>
+  <div class="meta">
+    <div>Target<b>ClusterOne console</b></div>
+    <div>Audit date<b>10 October 2026</b></div>
+    <div>Version observed<b>ClusterOne 0.1.0</b></div>
+    <div>Prepared by<b>ClusterOne Team · DIU CSE</b></div>
+  </div>
+  <img class="cover-shot" src="../assets/screenshots/01-overview-dashboard.png" alt="ClusterOne Overview dashboard (real screenshot)">
+  <div class="src">Evidence: 5 real screenshots + 5 captured pages · details in <b>research/</b> · press <b>T</b> for contents, <b>N</b> for notes, <b>F</b> for fullscreen</div>
+  <aside class="notes"><p>This deck audits the live ClusterOne console. Everything shown comes from real screenshots and page text captured on 10 Oct 2026 with a regular "User · default" account. Conceptual or inferred content is labelled as such.</p></aside>
+</section>
+
+<!-- 2 · EXECUTIVE OVERVIEW -->
+<section class="slide" data-title="Executive overview">
+  <span class="slide-no">02</span>
+  <div class="kicker"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>Executive overview</div>
+  <h2>Ordinary lab PCs, working as one GPU cloud</h2>
+  <p class="lede">ClusterOne pools the lab's existing Windows PCs into a shared, self-managing compute service. Users send code from a browser, terminal or Python. The master picks a free GPU, runs the job and returns the results; work too big for one PC is split across several.</p>
+  <div class="body grid2">
+    <div class="grid3" style="align-content:start">
+      <div class="card"><div class="stat">7 <small>PCs registered</small></div><p>5 online, 2 offline at capture time</p></div>
+      <div class="card"><div class="stat">5 <small>GPUs</small></div><p>28 GB VRAM pooled (RTX 3050 ×4, 3050 Laptop, 2050; 5060 Ti offline)</p></div>
+      <div class="card"><div class="stat">84 <small>cores</small></div><p>71 GB RAM across online PCs</p></div>
+      <div class="card"><div class="stat">292 <small>jobs done</small></div><p>Showcase counter (0 running)</p></div>
+      <div class="card"><div class="stat">16 <small>routes</small></div><p>Monitor · compute · AI · help · admin</p></div>
+      <div class="card"><div class="stat">4 <small>ways in</small></div><p>Web console, CLI, Python SDK, REST API</p></div>
+    </div>
+    <div class="card">
+      <h3>Audit scope &amp; method</h3>
+      <ul class="clean">
+        <li>Account: <b>Reyad</b>, role <code>User · default</code> (no admin)</li>
+        <li>8 of 16 pages inspected; 8 known only from links</li>
+        <li>Read-only: no jobs submitted, no sessions or mounts started</li>
+        <li>The audit sandbox could not open the site (proxy 403), so evidence was captured in the owner's own browser</li>
+        <li>Labels: <span class="chip ok">verified</span> <span class="chip inf">inference</span> <span class="chip rec">recommendation</span></li>
+      </ul>
+    </div>
+  </div>
+  <div class="src">Sources: <b>01-overview-dashboard.png</b>, <b>03-nodes-grid.png</b>, Showcase page text (/showcase) · research/site-map.md</div>
+  <aside class="notes"><p>The figures are snapshots and change live; another capture showed 4/7 nodes (64 cores, 4 GPUs). The 292-jobs counter comes from the Showcase page. The site's performance numbers are its own claims and were not re-measured.</p></aside>
+</section>
+
+<!-- 3 · PLATFORM AT A GLANCE -->
+<section class="slide" data-title="Platform at a glance">
+  <span class="slide-no">03</span>
+  <div class="kicker"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Platform at a glance</div>
+  <h2>Five module groups around one console</h2>
+  <div class="body diagram-wrap" style="margin-top:6px">
+    <div class="diagram" data-diagram="fmap" data-panel="fmap-info" data-svg="../assets/diagrams/feature-map.svg"></div>
+    <div class="info">
+      <div class="panel" id="fmap-info"><h3>Click a module</h3><p>Each box shows what was observed and how it was tested. Drag boxes to rearrange; <b>Reset layout</b> restores them.</p></div>
+      <div class="hint">Green = inspected (screenshot or page text) · grey dashed = known from links only · red = restricted for the test role.<br><br>Every page shares a sidebar, a "Live · updated Ns ago" indicator and a global <b>Submit job</b> button.</div>
+    </div>
+  </div>
+  <div class="src">Sources: sidebar links on all screenshots · research/site-map.md · research/feature-inventory.md · diagram: <b>assets/diagrams/feature-map.svg</b></div>
+  <aside class="notes"><p>Sixteen routes in total. Inspected: Overview, Cluster map, Nodes, LLM Playground, Mounted GPUs, Showcase, Guide, API keys. Not captured: My jobs, Submit job, Workspaces, My files, Environments, My account, Wall display, Node detail.</p></aside>
+</section>
+
+<!-- 4 · DASHBOARD -->
+<section class="slide" data-title="Overview dashboard">
+  <span class="slide-no">04</span>
+  <div class="kicker"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></svg>Monitoring · Overview</div>
+  <h2>Every PC's CPU, RAM and GPU in one live view</h2>
+  <div class="body grid2 wide" style="margin-top:8px">
+    <div>
+      <div class="shot" id="shot-ov" data-pins="17.5,16.5;47,66;81,36;42,42;86,4;12,88">
+        <img src="../assets/screenshots/01-overview-dashboard.png" alt="Overview dashboard: KPI tiles, live cluster topology and activity feed">
+      </div>
+    </div>
+    <ol class="callouts" data-for="shot-ov">
+      <li><b>KPI tiles with sparklines:</b> nodes online 5/7, GPUs in use 0/5, CPU 38%, network, memory 54/71 GB, jobs, completed today.</li>
+      <li><b>Master · scheduler</b> at the centre, 5 nodes connected; links show job flow and idle or draining state.</li>
+      <li><b>Live activity feed:</b> submitted, dispatched, queued, running, cancelled, removed.</li>
+      <li><b>Offline nodes</b> (red, dashed link) still show last-known bars <span class="chip part">issue I-02</span></li>
+      <li><b>Live indicator</b>, "updated 0s ago"; values changed between two captures.</li>
+      <li><b>Sidebar health card</b> with pooled cores, GPUs and RAM.</li>
+    </ol>
+  </div>
+  <div class="src">Evidence: <b>01-overview-dashboard.png</b> (/) · Overview page text · tests T01, T02 <span class="chip ok">Verified working</span></div>
+  <aside class="notes"><p>Below the fold (text only): 30-minute utilisation and throughput charts, "Running now", pool capacity, and quick links to all seven node pages. The two captures disagree slightly (CPU 38% vs 30%), which shows the data is live.</p></aside>
+</section>
+
+<!-- 5 · CLUSTER & NODES -->
+<section class="slide" data-title="Cluster map & nodes">
+  <span class="slide-no">05</span>
+  <div class="kicker"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="3"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/><path d="M12 8v4M12 12l-5 4M12 12l5 4"/></svg>Monitoring · Cluster &amp; nodes</div>
+  <h2>Topology map and per-PC hardware detail</h2>
+  <div class="body grid2 even" style="margin-top:8px">
+    <div>
+      <div class="shot" id="shot-map" data-pins="23,35;75,13;75,49">
+        <img src="../assets/screenshots/02-cluster-map-node-tooltip.png" alt="Cluster map with node hover tooltip and master panel">
+      </div>
+      <ol class="callouts" data-for="shot-map" style="margin-top:8px">
+        <li><b>Hover tooltip</b> on a node: "online · Click for details" <span class="chip ok">verified</span></li>
+        <li><b>Master panel:</b> scheduler Online, version 0.1.0, queue 0/0.</li>
+        <li><b>Working together:</b> 5 PCs that can run one multi-PC job (28 GB).</li>
+      </ol>
+    </div>
+    <div>
+      <div class="shot" id="shot-nodes" data-pins="17,12.5;33.3,18.3;60.5,73;24.6,45.5">
+        <img src="../assets/screenshots/03-nodes-grid.png" alt="Nodes page: seven node cards with live CPU, RAM, network and GPU metrics">
+      </div>
+      <ol class="callouts" data-for="shot-nodes" style="margin-top:8px">
+        <li><b>Summary:</b> 5 of 7 online · 84 cores · 71 GB · 28 GB VRAM.</li>
+        <li><b>Status, hostname, last seen</b>; offline PCs in red.</li>
+        <li><b>GPU card</b> with util, VRAM, °C and W. This one is 100% busy yet "free" <span class="chip part">I-04</span></li>
+        <li><b>Policy + environments:</b> <code>always</code>/<code>idle</code> · pytorch-cu128 · base-sci · tensorflow.</li>
+      </ol>
+    </div>
+  </div>
+  <div class="src">Evidence: <b>02-cluster-map-node-tooltip.png</b> (/cluster) · <b>03-nodes-grid.png</b> (/nodes) · tests T03, T04, T06 · node click, search and list view: Not tested</div>
+  <aside class="notes"><p>The map makes the hub-and-spoke design visible: a cloud master with outbound-connected lab PCs. Reyad PC's GPU at 100% and 73 °C with "0 running" is most likely the owner's own local work, so "free" here means not allocated by the cluster, not idle.</p></aside>
+</section>
+
+<!-- 6 · JOBS & COMPUTE -->
+<section class="slide" data-title="Jobs & compute">
+  <span class="slide-no">06</span>
+  <div class="kicker"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/></svg>Compute · Jobs, environments, workspaces</div>
+  <h2>The life of a job, as documented by the site</h2>
+  <div class="steps" style="margin-top:8px">
+    <div class="step"><div class="n">1</div><h3>Submit</h3><p>Web form, CLI, Python or REST. Quotas are checked at once.</p></div>
+    <div class="step"><div class="n">2</div><h3>Queue</h3><p>Fair-share queue on the master; every submission is audit-logged.</p></div>
+    <div class="step"><div class="n">3</div><h3>Match</h3><p>Free PC with enough GPU memory; skips PCs in local use.</p></div>
+    <div class="step"><div class="n">4</div><h3>Run</h3><p>Low-privilege sandbox, own GPU only, live log stream.</p></div>
+    <div class="step"><div class="n">5</div><h3>Results</h3><p><code>outputs/</code> comes back as outputs.zip.</p></div>
+  </div>
+  <div class="body grid2 even" style="margin-top:16px">
+    <div class="card">
+      <h3>Four ways in: same cluster, same rules</h3>
+      <pre class="cmd"><span class="c"># terminal (pip install …/install/clusterone-sdk.zip)</span>
+clusterone submit . --gpus 1 -f -- python train.py
+clusterone submit . --gpus 1 --nodes 2 -f -- python train.py <span class="c"># DDP</span>
+<span class="c"># REST: POST /api/v1/jobs  · Authorization: Bearer c1u_…</span></pre>
+      <h3 style="margin-top:14px">Job statuses (Guide)</h3>
+      <p style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px"><span class="chip no">Submitting</span><span class="chip no">Queued</span><span class="chip rec">Running</span><span class="chip no">Transferring</span><span class="chip ok">Completed</span><span class="chip res">Failed</span><span class="chip part">Timed out</span><span class="chip part">Held</span><span class="chip no">Cancelled</span></p>
+      <p style="margin-top:8px">Platform exit codes 90–93 = bad zip, env missing, package install failed, dataset download failed.</p>
+    </div>
+    <div class="card">
+      <h3>What a job can use</h3>
+      <ul class="clean">
+        <li><b>Environments:</b> base-sci, pytorch-cu128 (default), tensorflow. TF is CPU-only on Windows <span class="chip part">I-01</span></li>
+        <li><b>Multi-PC:</b> data-parallel (fp16 gradients) or GPipe-style pipeline over the 1 Gbps LAN</li>
+        <li><b>Storage:</b> shared datasets, My files (20 GB default), JupyterLab / VS Code workspaces</li>
+        <li><span class="chip no">Not tested</span> Submit, My jobs, Workspaces and Files pages were not captured</li>
+      </ul>
+    </div>
+  </div>
+  <div class="src">Sources: Showcase "How it works" · Guide (statuses, recipes, env vars, endpoints, environments) · research/feature-inventory.md F14–F20</div>
+  <aside class="notes"><p>Statuses: Submitting → Queued → Running → Transferring → Completed, plus Failed, Timed out, Held and Cancelled. Exit codes 90–93 are platform errors (bad zip, missing env, package install, dataset). The Guide's resource planner recommended 1 GPU ≥ 4 GB, 4 cores, 9 GB RAM and 75 min for a small/medium network, and listed four PCs that fit.</p></aside>
+</section>
+
+<!-- 7 · LLM PLAYGROUND & MOUNTED GPUS -->
+<section class="slide" data-title="LLM Playground & Mounted GPUs">
+  <span class="slide-no">07</span>
+  <div class="kicker"><svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M12 8V4M8 14h.01M16 14h.01"/></svg>AI · LLM Playground &amp; Mounted GPUs</div>
+  <h2>Run models bigger than any single PC</h2>
+  <div class="body grid2" style="margin-top:8px">
+    <div>
+      <div class="shot" id="shot-pg" data-pins="33.5,26;46.7,45.7;68,62.6;37.8,71.3;89,20">
+        <img src="../assets/screenshots/04-llm-playground-pc-selection.png" alt="LLM Playground: Qwen3 8B selected, two PCs ticked, fit check and settings">
+      </div>
+      <ol class="callouts two" data-for="shot-pg" style="margin-top:8px">
+        <li><b>Model:</b> Qwen3 8B Q4_K_M, 4.68 GB (177 models)</li>
+        <li><b>Offline PCs</b> are disabled in the picker</li>
+        <li><b>Fit check:</b> 2 PCs · 11 GB free · needs 7.0 GB</li>
+        <li><b>Ready in ~3 min</b>: download, spread, load</li>
+        <li><b>Settings:</b> presets, temperature, top-p, reasoning</li>
+      </ol>
+    </div>
+    <div class="card">
+      <h3>Mounted GPUs: borrow lab GPUs for your own PC</h3>
+      <ul class="clean">
+        <li><code>clusterone mount --gpus 2 --model qwen7b</code></li>
+        <li>llama.cpp runs locally; borrowed GPUs hold layers over RPC</li>
+        <li>Serves an OpenAI-compatible API on <code>127.0.0.1:8080/v1</code>; prompts stay on the user's PC</li>
+        <li>Auto-release after 5 min of silence; every mount is audit-logged</li>
+        <li>Off-site use requires an admin to run <code>mesh join</code></li>
+      </ul>
+      <p style="margin-top:10px"><span class="chip ok">verified</span> page and PC selection · <span class="chip no">not tested</span> Start session and mounting, which would reserve shared GPUs</p>
+    </div>
+  </div>
+  <div class="src">Evidence: <b>04-llm-playground-pc-selection.png</b> (/playground) · Mounted GPUs page text (/mounts) · tests T08–T12</div>
+  <aside class="notes"><p>The Playground spreads a model's layers over the GPUs you tick, and the fit bar updates as you select. Mounted GPUs is the power-user path: borrow 2–6 lab GPUs and run llama.cpp on your own laptop. The manual lists models from Qwen 2.5 7B (2 GPUs) to Qwen 2.5 32B (5 GPUs).</p></aside>
+</section>
+
+<!-- 8 · IDENTITY & ACCESS -->
+<section class="slide" data-title="Identity & administration">
+  <span class="slide-no">08</span>
+  <div class="kicker"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Identity &amp; administration</div>
+  <h2>Roles, quotas and scoped API keys</h2>
+  <div class="body grid2" style="margin-top:8px">
+    <div>
+      <div class="shot" id="shot-keys" data-pins="47.5,24;17.5,3;11.4,19;6,95">
+        <img src="../assets/screenshots/05-api-keys-restricted.png" alt="API keys page showing 'You don't have access to this page' for the User role">
+      </div>
+      <ol class="callouts two" data-for="shot-keys" style="margin-top:8px">
+        <li><b>Permission denied,</b> handled cleanly</li>
+        <li><b>URL</b> <code>/api-keys</code> (not in sidebar)</li>
+        <li><b>Capacity changed:</b> 4/7 nodes then</li>
+        <li><b>Role:</b> User · default</li>
+      </ol>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="card">
+        <h3>Five built-in roles + custom roles</h3>
+        <p>Administrator · Operator · User · API client · Viewer, with per-person grant/deny. The site says every page, button and API call is checked on the server.</p>
+      </div>
+      <div class="card">
+        <h3>Quotas for this account (Guide)</h3>
+        <p>4 active jobs · 2 GPUs per job · 1440 min per job (group <code>default</code>); everything else unlimited. Fair share between groups.</p>
+      </div>
+      <div class="card">
+        <h3>API keys</h3>
+        <p><code>c1u_…</code> keys sent as Bearer or X-API-Key, with scopes, expiry, IP allow-list and rate limit. Where regular users create their own keys is unclear <span class="chip part">I-03</span></p>
+      </div>
+    </div>
+  </div>
+  <div class="src">Evidence: <b>05-api-keys-restricted.png</b> (/api-keys) · Showcase "Access control" · Guide "Your limits" · test T17 <span class="chip res">Restricted</span> (access control working)</div>
+  <aside class="notes"><p>A permission wall is a correct result, not a failure. The Guide tells users to create keys under My account → API keys, so /api-keys is probably the admin-wide key manager. My account was not captured, so that remains unverified. Admin screens (users, roles, audit log, settings) were not visible to this role.</p></aside>
+</section>
+
+<!-- 9 · INTERACTION RESULTS -->
+<section class="slide" data-title="Interaction results">
+  <span class="slide-no">09</span>
+  <div class="kicker"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Feature interaction results</div>
+  <h2>No failures observed in what was tested</h2>
+  <div class="body grid2" style="margin-top:4px">
+    <div>
+      <table class="t">
+        <thead><tr><th>#</th><th>Interaction</th><th>Result</th></tr></thead>
+        <tbody>
+          <tr><td>T01–02</td><td>Overview loads and refreshes live</td><td><span class="chip ok">Verified</span></td></tr>
+          <tr><td>T03–04</td><td>Cluster map + node hover tooltip</td><td><span class="chip ok">Verified</span></td></tr>
+          <tr><td>T06</td><td>Nodes grid with live GPU metrics</td><td><span class="chip ok">Verified</span></td></tr>
+          <tr><td>T08–10</td><td>Playground: select PCs, fit check, offline PCs disabled</td><td><span class="chip ok">Verified</span></td></tr>
+          <tr><td>T12–15</td><td>Mounts, Guide, planner, Showcase render</td><td><span class="chip ok">Verified</span></td></tr>
+          <tr><td>T17</td><td>/api-keys as User role</td><td><span class="chip res">Restricted</span></td></tr>
+          <tr><td>T05, T07</td><td>Node click, search, list view</td><td><span class="chip no">Not tested</span></td></tr>
+          <tr><td>T11</td><td>Start LLM session (would reserve GPUs)</td><td><span class="chip no">Not tested</span></td></tr>
+          <tr><td>T16</td><td>Showcase interactive demos</td><td><span class="chip no">Not tested</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card">
+        <h3>18 interactions</h3>
+        <div class="bar" style="margin:10px 0 8px"><span style="width:72.2%;background:var(--green)"></span><span style="width:5.6%;background:var(--red)"></span><span style="width:22.2%;background:#b8c0d8"></span></div>
+        <p><b style="color:var(--green)">13 verified</b> · <b style="color:var(--red)">1 restricted</b> · <b>4 not tested</b> · 0 failed</p>
+      </div>
+      <div class="card">
+        <h3>30 features documented</h3>
+        <div class="bar" style="margin:10px 0 8px"><span style="width:63.3%;background:var(--green)"></span><span style="width:3.3%;background:var(--amber)"></span><span style="width:3.3%;background:var(--red)"></span><span style="width:30%;background:#b8c0d8"></span></div>
+        <p><b style="color:var(--green)">19 verified</b> · <b style="color:var(--amber)">1 partial</b> · <b style="color:var(--red)">1 restricted</b> · <b>9 not tested</b></p>
+      </div>
+      <div class="card"><p><b>Caveat:</b> the sample covers only captured states. With no browser console or network trace, hidden errors cannot be ruled out.</p></div>
+    </div>
+  </div>
+  <div class="src">Sources: research/interaction-test-results.md · research/feature-inventory.md</div>
+  <aside class="notes"><p>"Not tested" means no adequate test was performed, usually because it would consume shared GPUs or the page was not captured. It is not a failure.</p></aside>
+</section>
+
+<!-- 10 · ARCHITECTURE -->
+<section class="slide" data-title="System architecture">
+  <span class="slide-no">10</span>
+  <div class="kicker"><svg viewBox="0 0 24 24"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>System architecture</div>
+  <h2>Cloud master, outbound-only lab agents</h2>
+  <div class="body diagram-wrap" style="margin-top:4px">
+    <div class="diagram" data-diagram="arch" data-panel="arch-info" data-svg="../assets/diagrams/system-architecture.svg"></div>
+    <div class="info">
+      <div class="panel" id="arch-info"><h3>Click a component</h3><p>Each box shows its evidence and source. Drag boxes to rearrange; <b>Reset layout</b> restores the original.</p></div>
+      <div class="hint"><b>Solid blue:</b> stated on the site · <b>purple dashed:</b> inference · <b>amber dashed:</b> team notes, not visible on the site · <b>grey dotted:</b> unknown.<br><br>Keyboard: Tab to a box, Enter for details, Alt+arrows to move it.</div>
+    </div>
+  </div>
+  <div class="src">Sources: Showcase "Architecture", Guide (endpoints, env vars, multi-PC), Mounts manual, screenshot 02 · research/architecture-notes.md · <b>assets/diagrams/system-architecture.svg</b></div>
+  <aside class="notes"><p>Confirmed: an HTTPS master behind Cloudflare with web console, REST API, RBAC/quotas/audit, a fair-share gang scheduler and monitoring; Windows node agents that only make outbound connections; job sandboxes; Gloo-based DDP and pipeline training over the LAN. Inferred: the HTCondor-style scheduler (state names idle/held/transferring) and FastAPI (the {"detail"} error shape). Team notes: PostgreSQL via asyncpg. Unknown: front-end framework, mesh technology, login method.</p></aside>
+</section>
+
+<!-- 11 · USER WORKFLOW -->
+<section class="slide" data-title="User workflow">
+  <span class="slide-no">11</span>
+  <div class="kicker"><svg viewBox="0 0 24 24"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg>User workflow</div>
+  <h2>Three paths: batch jobs, browser chat, borrowed GPUs</h2>
+  <div class="body diagram-wrap" style="margin-top:4px">
+    <div class="diagram" data-diagram="flow" data-panel="flow-info" data-svg="../assets/diagrams/user-workflow.svg"></div>
+    <div class="info">
+      <div class="panel" id="flow-info"><h3>Click a step</h3><p>Steps come from the Guide, Showcase and Mounted GPUs manual. Drag to rearrange; <b>Reset layout</b> restores it.</p></div>
+      <div class="hint">Blue = main batch-job path · purple = LLM alternatives.<br><br>Each path ends by giving capacity back: jobs end at their time limit, sessions are stopped, mounts are released.</div>
+    </div>
+  </div>
+  <div class="src">Sources: Guide "How it works" &amp; "Getting started" · Showcase "life of a job" · Mounted GPUs manual steps 1–8 · <b>assets/diagrams/user-workflow.svg</b></div>
+  <aside class="notes"><p>Typical first run, according to the Guide: check the cluster has online nodes and ready software, run the "Hello, cluster" recipe (about 30 s), download its outputs, and optionally create an API key for scripts.</p></aside>
+</section>
+
+<!-- 12 · STRENGTHS & LIMITATIONS -->
+<section class="slide" data-title="Strengths & limitations">
+  <span class="slide-no">12</span>
+  <div class="kicker"><svg viewBox="0 0 24 24"><path d="M12 3v18M5 7h14M5 7l-3 7a4 4 0 0 0 6 0zM19 7l-3 7a4 4 0 0 0 6 0z"/></svg>Strengths &amp; limitations</div>
+  <h2>What works well, and what holds it back</h2>
+  <div class="body grid2 even" style="margin-top:8px">
+    <div class="card">
+      <h3 style="color:var(--green)">Strengths (observed)</h3>
+      <ul class="clean">
+        <li><b>Real-time observability</b>: KPIs, topology, per-GPU temperature and power <small class="muted">01–03</small></li>
+        <li><b>Guidance for non-experts</b>: Playground fit check and ETA, resource planner, plain-language manuals <small class="muted">04, Guide</small></li>
+        <li><b>Access control enforced</b> in the UI; roles, quotas and scoped keys documented <small class="muted">05</small></li>
+        <li><b>Several entry points</b>: web, CLI, SDK and a documented REST API</li>
+        <li><b>Honest docs</b>: both Showcase and Guide list known limits openly</li>
+        <li><b>Reuses existing hardware</b>: 7 lab PCs, 28 GB pooled VRAM</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="color:var(--amber)">Limitations (observed or documented)</h3>
+      <ul class="clean">
+        <li><b>Small GPUs</b> (4–8 GB each); multi-PC is needed for bigger models</li>
+        <li><b>Windows-only nodes</b>: Gloo only, no FSDP/ZeRO-3; TensorFlow has no GPU <small class="muted">I-01</small></li>
+        <li><b>Depends on PC owners</b>: 2/7 offline, high host RAM, GPU busy but "free" <small class="muted">I-04, I-06</small></li>
+        <li><b>Network</b>: 1 Gbps LAN, some slow links <small class="muted">I-07</small></li>
+        <li><b>Display gaps</b>: stale metrics on offline nodes; unclear API-key path <small class="muted">I-02, I-03</small></li>
+        <li><b>Early release</b> (v0.1.0); performance claims not independently verified</li>
+      </ul>
+    </div>
+  </div>
+  <div class="src">Sources: research/issues.md (I-01 … I-12, A-04) · screenshots 01–05 · Showcase "Honest picture"</div>
+  <aside class="notes"><p>The Showcase's measured figures (349 img/s on one RTX 3050, 0.35 ms RTT, under 1 s gang start, 3.25× on 4 PCs) are presented as the team's own measurements and were not re-run in this audit.</p></aside>
+</section>
+
+<!-- 13 · RECOMMENDATIONS & ROADMAP -->
+<section class="slide" data-title="Recommendations & roadmap">
+  <span class="slide-no">13</span>
+  <div class="kicker"><svg viewBox="0 0 24 24"><path d="M4 22V4a1 1 0 0 1 1-1h13l-3 5 3 5H5"/></svg>Recommendations &amp; roadmap <span class="chip rec" style="margin-left:6px">Recommendations, not observed features</span></div>
+  <h2>Prioritised improvements from the findings</h2>
+  <div class="body grid3" style="margin-top:8px;align-content:start">
+    <div class="card">
+      <h3><span class="chip res">P1</span> Quick wins</h3>
+      <ul class="clean">
+        <li>Grey out offline-node metrics and label them "last known · 5h ago" <small class="muted">I-02</small></li>
+        <li>Add an "in local use" GPU state when utilisation is high with no job <small class="muted">I-04</small></li>
+        <li>Link the /api-keys denial page to the personal key box on My account <small class="muted">I-03</small></li>
+        <li>Warn when a TensorFlow job asks for a GPU on Windows <small class="muted">I-01</small></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3><span class="chip part">P2</span> Reliability</h3>
+      <ul class="clean">
+        <li>Fix the 10 Mbps link and show link speed on node cards <small class="muted">I-07</small></li>
+        <li>Pre-cache imagenette2-320 on online nodes <small class="muted">I-08</small></li>
+        <li>Fix the empty "layers 49–48" stage in the pipeline demo <small class="muted">I-05</small></li>
+        <li>Publish the benchmark method behind the Showcase numbers <small class="muted">A-04</small></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3><span class="chip rec">P3</span> Roadmap</h3>
+      <ul class="clean">
+        <li>Cloud-burst nodes for 24–80 GB jobs <small class="muted">site's own plan</small></li>
+        <li>Checkpoint-and-resume helpers <small class="muted">site's own plan</small></li>
+        <li>Notebook integration and GPU-hour / cost dashboards <small class="muted">site's own plan</small></li>
+        <li>A Linux/WSL node for NCCL and TensorFlow GPU support</li>
+      </ul>
+    </div>
+  </div>
+  <div class="card" style="margin-top:14px"><p><b>Next audit step:</b> repeat with an admin account and an instrumented browser (console and network logs) to cover the 8 uncaptured pages, the API and the admin tools.</p></div>
+  <div class="src">Sources: research/issues.md · Showcase "Limits &amp; next" (P3 items marked "site's own plan")</div>
+  <aside class="notes"><p>The P1 items are mostly front-end changes that make the console show the truth more clearly. P2 items need physical or operational work. The first three P3 items are the team's published roadmap; the Linux node is this audit's suggestion.</p></aside>
+</section>
+
+<!-- 14 · CONCLUSION -->
+<section class="slide" data-title="Conclusion">
+  <span class="slide-no">14</span>
+  <div class="kicker"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Conclusion</div>
+  <h2>A working lab GPU cloud with a polished console</h2>
+  <div class="body grid2" style="margin-top:8px">
+    <div class="grid2 even" style="align-content:start;height:auto">
+      <div class="card"><h3>1 · It is live</h3><p>Seven lab PCs report real-time CPU, RAM and GPU data to a cloud master. Every captured interaction worked.</p></div>
+      <div class="card"><h3>2 · It goes beyond one GPU</h3><p>Multi-PC jobs, the LLM Playground and Mounted GPUs pool small cards into usable capacity.</p></div>
+      <div class="card"><h3>3 · It is governed</h3><p>Roles, quotas, scoped keys and audit logging; the permission wall was verified.</p></div>
+      <div class="card"><h3>4 · It is honest, with clear next steps</h3><p>The limits are mostly hardware and network; the UI fixes in P1 are small.</p></div>
+    </div>
+    <div class="card">
+      <h3>Still unverified</h3>
+      <ul class="clean">
+        <li>Submit, My jobs, Workspaces, My files, Environments, My account and Wall display pages</li>
+        <li>Actual job, session and mount execution; CLI and REST calls</li>
+        <li>Scheduler identity (HTCondor inferred), mesh technology, login method, front-end framework</li>
+        <li>The Showcase's performance figures</li>
+      </ul>
+      <p style="margin-top:12px">Full evidence lives in <code>research/</code>; diagrams in <code>assets/diagrams/</code>.</p>
+    </div>
+  </div>
+  <div class="src">Sources: research/*.md · screenshots 01–05 · the ClusterOne console</div>
+  <aside class="notes"><p>Bottom line: ClusterOne turns idle lab desktops into a shared GPU service that a student can use from a browser. Its potential grows with every PC added, and the roadmap's cloud-burst idea addresses the biggest gap, which is memory per GPU.</p></aside>
+</section>
+
+</main>
+</div>
+
+<div id="progress"></div>
+<nav id="controls" aria-label="Slide controls">
+  <button class="icon-btn" id="toc-btn" title="Contents (T)" aria-label="Table of contents"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></button>
+  <button class="icon-btn" id="prev" title="Previous (←)" aria-label="Previous slide"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+  <span id="counter">1 / 14</span>
+  <button class="icon-btn" id="next" title="Next (→)" aria-label="Next slide"><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+  <span id="title-now"></span>
+  <button class="icon-btn" id="notes-btn" title="Speaker notes (N)" aria-label="Toggle speaker notes"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg></button>
+  <button class="icon-btn" id="print-btn" title="Print / save as PDF" aria-label="Print or save as PDF"><svg viewBox="0 0 24 24"><path d="M6 9V2h12v7"/><rect x="6" y="14" width="12" height="8"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/></svg></button>
+  <button class="icon-btn" id="fs-btn" title="Fullscreen (F)" aria-label="Toggle fullscreen"><svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg></button>
+</nav>
+
+<div class="overlay" id="toc" role="dialog" aria-label="Table of contents">
+  <button class="icon-btn close" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+  <div class="box"><h3>Contents</h3><ol></ol></div>
+</div>
+<div class="overlay" id="lightbox" role="dialog" aria-label="Screenshot viewer">
+  <button class="icon-btn close" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+  <figure style="margin:0"><img src="" alt=""><figcaption></figcaption></figure>
+</div>
+<div id="notes" aria-live="polite"></div>
+
+<script src="assets/diagrams-data.js"></script>
+<script src="assets/deck.js"></script>
+</body>
+</html>
