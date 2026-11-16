@@ -1,0 +1,91 @@
+#!/usr/sbin/nft -f
+# ClusterOne anchor firewall + NAT (N4.3, N4.5, N8.2). Source of truth: reference/port-matrix.md
+#
+# Installed as /etc/nftables.conf on anchor01. Deploy through scripts/apply-firewall.sh or
+# the Ansible play (automatic rollback timer). Only our own tables are touched, so
+# fail2ban's tables survive a reload.
+#
+# Interface names are per-node facts (inventory/interfaces.csv): anchor01 = eno1 campus,
+# eno2 fabric. Change the two defines below if the hardware differs.
+
+define FABRIC    = 10.42.0.0/24
+define FABRIC_IF = "eno2"
+define CAMPUS_IF = "eno1"
+
+add table inet clusterone
+flush table inet clusterone
+
+table inet clusterone {
+
+  # Empty by default; scripts/bench-fw.sh opens iperf3 temporarily (N1/N5 measurements).
+  chain bench { }
+
+  # Populated by the included egress file (open during N4, allowlist from N8).
+  # An empty chain simply returns, and the forward chain then drops.
+  chain egress_policy { }
+
+  chain input {
+    type filter hook input priority filter; policy drop;
+
+    iif lo accept
+    ct state established,related accept
+    ct state invalid drop
+    ip protocol icmp accept
+    ip6 nexthdr icmpv6 accept
+
+    # ── from the fabric ──────────────────────────────────────────────────────
+    iifname $FABRIC_IF ip saddr $FABRIC tcp dport { 22, 53, 514, 6817, 8000, 9500 } accept comment "ssh dns syslog slurmctld api agent(TBC)"
+    iifname $FABRIC_IF ip saddr $FABRIC tcp dport 60001-63000 accept comment "srun step ports"
+    iifname $FABRIC_IF ip saddr $FABRIC udp dport { 53, 123 } accept comment "dns ntp"
+    # NFS (v4 needs only 2049; rpcbind/mountd kept for v3 clients). mountd is pinned in
+    # nfs/nfs.conf.d — statd/lockd 32765-32768 are NOT opened until Shanto confirms v3.
+    iifname $FABRIC_IF ip saddr $FABRIC tcp dport { 2049, 111, 20048 } accept comment "nfs"
+    iifname $FABRIC_IF ip saddr $FABRIC udp dport { 111, 20048 } accept comment "nfs (rpcbind/mountd)"
+    ip saddr $FABRIC tcp dport 5201 jump bench
+    # DHCP staging pool: discover/request come from 0.0.0.0, so match on interface only
+    iifname $FABRIC_IF udp sport 68 udp dport 67 accept comment "dhcp staging pool"
+
+    # ── from campus: the public face, deliberately tiny ──────────────────────
+    # 6817, 9090, 5432 and every fabric service are never reachable from here.
+    iifname $CAMPUS_IF tcp dport 22 ct state new limit rate 20/minute accept comment "ssh (rate-limited)"
+    iifname $CAMPUS_IF tcp dport { 443, 3000 } accept comment "web, grafana"
+    # campus DHCP lease renewal (unicast replies are not always tracked by conntrack)
+    iifname $CAMPUS_IF udp sport 67 udp dport 68 accept comment "campus dhcp client"
+
+    limit rate 5/minute log prefix "nft-drop-in: " level info
+  }
+
+  chain forward {
+    type filter hook forward priority filter; policy drop;
+
+    ct state established,related accept
+    ct state invalid drop
+
+    # jumbo frames on the fabric, 1500 on campus: clamp MSS so PMTU black holes on the
+    # internet path never hang a node's TCP session
+    iifname $FABRIC_IF oifname $CAMPUS_IF tcp flags syn tcp option maxseg size set rt mtu
+
+    # the one controlled door out (ADR-N6): policy lives in the included egress file
+    iifname $FABRIC_IF oifname $CAMPUS_IF ip saddr $FABRIC jump egress_policy
+
+    limit rate 10/minute log prefix "egress-drop: " level info
+  }
+
+  chain output {
+    type filter hook output priority filter; policy accept;
+  }
+}
+
+# NAT egress for the fabric (N4.3)
+add table ip clusterone_nat
+flush table ip clusterone_nat
+table ip clusterone_nat {
+  chain postrouting {
+    type nat hook postrouting priority srcnat; policy accept;
+    ip saddr $FABRIC oifname $CAMPUS_IF masquerade
+  }
+}
+
+# Egress policy: firewall/egress-open.nft (N4) or the generated allowlist (N8).
+# Ansible/apply-firewall.sh installs one of them at this path before loading.
+include "/etc/nftables.d/clusterone-egress.nft"

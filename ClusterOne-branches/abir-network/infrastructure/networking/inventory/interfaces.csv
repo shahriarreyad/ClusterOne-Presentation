@@ -1,0 +1,10 @@
+# Per-node interface map (naming-convention.md §3: "record per-node and template the configs").
+# fabric_if = NIC on net-cluster (10.42.0.0/24).  campus_if = uplink (anchor only).
+# mac is filled from `ip -br link` during N0/N1 (scripts/collect-node-info.sh prints it).
+# shortname,fabric_if,campus_if,mac
+anchor01,eno2,eno1,
+gpu01,eno1,,
+gpu02,eno1,,
+gpu03,eno1,,
+gpu04,eno1,,
+gpu05,eno1,,

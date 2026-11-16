@@ -1,0 +1,56 @@
+---
+# Time sync, sysctl base, NCCL env, and package prerequisites (N2/N7)
+- name: Common baseline
+  hosts: cluster
+  tags: [common]
+  tasks:
+    - name: Install packages
+      ansible.builtin.apt:
+        name: [chrony, iperf3, jq, tcpdump, ethtool, nftables, pdsh, nfs-common]
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Base sysctl (hardening + IPv6 off)
+      ansible.builtin.copy:
+        src: "{{ net_root }}/sysctl/99-clusterone.conf"
+        dest: /etc/sysctl.d/99-clusterone.conf
+        mode: "0644"
+      notify: reload sysctl
+
+    - name: NCCL environment
+      ansible.builtin.copy:
+        src: "{{ net_root }}/profile.d/clusterone-nccl.sh"
+        dest: /etc/profile.d/clusterone-nccl.sh
+        mode: "0644"
+
+    - name: chrony on the anchor (server)
+      ansible.builtin.copy:
+        src: "{{ net_root }}/chrony/anchor.conf"
+        dest: /etc/chrony/chrony.conf
+        mode: "0644"
+      when: inventory_hostname in groups['controller']
+      notify: restart chrony
+
+    - name: chrony on compute nodes (client of the anchor)
+      ansible.builtin.copy:
+        src: "{{ net_root }}/chrony/compute.conf"
+        dest: /etc/chrony/chrony.conf
+        mode: "0644"
+      when: inventory_hostname in groups['compute']
+      notify: restart chrony
+
+    - name: Anchor forwards packets
+      ansible.builtin.copy:
+        src: "{{ net_root }}/sysctl/99-clusterone-anchor.conf"
+        dest: /etc/sysctl.d/99-clusterone-anchor.conf
+        mode: "0644"
+      when: inventory_hostname in groups['controller']
+      notify: reload sysctl
+
+  handlers:
+    - name: reload sysctl
+      ansible.builtin.command: sysctl --system
+      changed_when: true
+    - name: restart chrony
+      ansible.builtin.service: {name: chrony, state: restarted}

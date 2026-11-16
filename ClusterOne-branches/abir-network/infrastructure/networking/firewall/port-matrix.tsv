@@ -1,0 +1,40 @@
+# Machine-readable form of reference/port-matrix.md — consumed by scripts/port-check.sh.
+# Change both files in the same PR.
+#
+# from/to : anchor | compute | peer (a DIFFERENT compute node than the source) | sw01
+# proto   : tcp   (UDP 53/123 and ICMP are checked separately by port-check.sh)
+# ports   : comma list of ports or ranges; ranges are sampled (first, middle, last)
+# expect  : open | blocked
+# status  : confirmed | tbc   (tbc failures are warnings until the owner confirms the port)
+#
+# id	from	to	proto	ports	expect	status	owner	note
+ssh-a2c	anchor	compute	tcp	22	open	confirmed	Abir	key-only
+ssh-c2a	compute	anchor	tcp	22	open	confirmed	Abir
+ssh-c2c	compute	peer	tcp	22	open	confirmed	Abir	node<->node for MPI/torchrun
+slurmd	anchor	compute	tcp	6818	open	confirmed	Rahat	controller dispatches
+slurmctld	compute	anchor	tcp	6817	open	confirmed	Rahat	nodes report in (opposite direction to slurmd)
+srun-a2c	anchor	compute	tcp	60001-63000	open	confirmed	Rahat	SrunPortRange
+srun-c2a	compute	anchor	tcp	60001-63000	open	confirmed	Rahat
+srun-c2c	compute	peer	tcp	60001-63000	open	confirmed	Rahat
+agent-a2c	anchor	compute	tcp	9500	open	tbc	Tanvir	placeholder until Tanvir fixes the port
+agent-c2a	compute	anchor	tcp	9500	open	tbc	Tanvir
+api	compute	anchor	tcp	8000	open	confirmed	Rahat
+dns-tcp	compute	anchor	tcp	53	open	confirmed	Abir
+syslog	compute	anchor	tcp	514	open	confirmed	Abir	audit forwarding (N8)
+nfs	compute	anchor	tcp	2049,111,20048	open	confirmed	Shanto	mountd must be pinned to 20048
+node-exp	anchor	compute	tcp	9100	open	confirmed	Zafor
+dcgm-exp	anchor	compute	tcp	9400	open	confirmed	Zafor
+rendezvous	compute	peer	tcp	29400-29600	open	confirmed	Fahim	torchrun c10d
+nccl-data	compute	peer	tcp	32768-60999	open	confirmed	Fahim	kernel ephemeral range
+# ── NEGATIVE: everything that must be closed (port-matrix.md §8) ─────────────
+prom-blk	compute	anchor	tcp	9090	blocked	confirmed	Zafor	nodes never reach Prometheus
+alertm-blk	compute	anchor	tcp	9093	blocked	confirmed	Zafor
+pg-blk	compute	anchor	tcp	5432	blocked	confirmed	Kundu	postgres is localhost-only
+slurmdbd-blk	compute	anchor	tcp	6819	blocked	confirmed	Rahat	slurmdbd is local to the anchor
+web-blk	compute	anchor	tcp	80,443,3000	blocked	confirmed	Rahat	web/grafana are campus-facing only
+sw-blk	compute	sw01	tcp	22,80,443	blocked	confirmed	Abir	a compromised job must not reconfigure the switch
+exp-blk	compute	peer	tcp	9100,9400	blocked	confirmed	Zafor	exporters answer the anchor only
+slurmd-blk	compute	peer	tcp	6818	blocked	confirmed	Rahat	only the controller may talk to slurmd
+agent-blk	compute	peer	tcp	9500	blocked	tbc	Tanvir	agent answers the anchor only
+misc-a2c	anchor	compute	tcp	8080,3306,5900	blocked	confirmed	Abir	default deny: ports not in the matrix
+misc-c2c	compute	peer	tcp	8080,3306,5900	blocked	confirmed	Abir

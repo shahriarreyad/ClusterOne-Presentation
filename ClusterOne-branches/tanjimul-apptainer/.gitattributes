@@ -1,0 +1,5 @@
+# Keep LF endings so scripts run inside WSL/Linux even when committed from Windows
+*.sh text eol=lf
+*.py text eol=lf
+Dockerfile text eol=lf
+*.yml text eol=lf

@@ -1,0 +1,66 @@
+---
+# N8: central audit logging, fail2ban on the anchor, NFS port pinning, container network policy.
+- name: Logging receiver + fail2ban + NFS pinning (anchor)
+  hosts: controller
+  tags: [hardening]
+  tasks:
+    - name: Install packages
+      ansible.builtin.apt: {name: [rsyslog, fail2ban, logrotate], state: present}
+
+    - name: rsyslog receiver
+      ansible.builtin.copy:
+        src: "{{ net_root }}/rsyslog/10-clusterone-receive.conf"
+        dest: /etc/rsyslog.d/10-clusterone-receive.conf
+        mode: "0644"
+      notify: restart rsyslog
+
+    - name: 90-day logrotate
+      ansible.builtin.copy:
+        src: "{{ net_root }}/rsyslog/clusterone-logrotate"
+        dest: /etc/logrotate.d/clusterone
+        mode: "0644"
+
+    - name: Log directory
+      ansible.builtin.file: {path: /var/log/clusterone, state: directory, owner: syslog, group: adm, mode: "0750"}
+
+    - name: fail2ban sshd jail
+      ansible.builtin.copy:
+        src: "{{ net_root }}/fail2ban/jail.d/clusterone-sshd.local"
+        dest: /etc/fail2ban/jail.d/clusterone-sshd.local
+        mode: "0644"
+      notify: restart fail2ban
+
+    - name: Pin mountd port
+      ansible.builtin.copy:
+        src: "{{ net_root }}/nfs/nfs.conf.d-clusterone.conf"
+        dest: /etc/nfs.conf.d/clusterone.conf
+        mode: "0644"
+
+  handlers:
+    - name: restart rsyslog
+      ansible.builtin.service: {name: rsyslog, state: restarted}
+    - name: restart fail2ban
+      ansible.builtin.service: {name: fail2ban, state: restarted, enabled: true}
+
+- name: Log forwarding + container policy (compute)
+  hosts: compute
+  tags: [hardening]
+  tasks:
+    - name: rsyslog forwarder
+      ansible.builtin.copy:
+        src: "{{ net_root }}/rsyslog/90-clusterone-forward.conf"
+        dest: /etc/rsyslog.d/90-clusterone-forward.conf
+        mode: "0644"
+      notify: restart rsyslog
+
+    - name: Docker daemon — no firewall rules of its own
+      ansible.builtin.copy:
+        src: "{{ net_root }}/containers/docker-daemon.json"
+        dest: /etc/docker/daemon.json
+        mode: "0644"
+      when: ansible_facts.services is defined and 'docker.service' in ansible_facts.services
+      ignore_errors: true
+
+  handlers:
+    - name: restart rsyslog
+      ansible.builtin.service: {name: rsyslog, state: restarted}

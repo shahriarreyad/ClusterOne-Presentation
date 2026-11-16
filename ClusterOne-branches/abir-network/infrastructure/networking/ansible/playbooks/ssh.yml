@@ -1,0 +1,36 @@
+---
+# SSH baseline (N3). Hardening drop-in is opt-in (enable_ssh_hardening) because AllowGroups can lock you out.
+- name: SSH
+  hosts: cluster
+  tags: [ssh]
+  tasks:
+    - name: Baseline drop-in
+      ansible.builtin.copy:
+        src: "{{ net_root }}/ssh/sshd_config.d/10-clusterone.conf"
+        dest: /etc/ssh/sshd_config.d/10-clusterone.conf
+        mode: "0644"
+      notify: reload ssh
+
+    - name: Hardening drop-in
+      ansible.builtin.copy:
+        src: "{{ net_root }}/ssh/sshd_config.d/20-clusterone-hardening.conf"
+        dest: /etc/ssh/sshd_config.d/20-clusterone-hardening.conf
+        mode: "0644"
+      when: enable_ssh_hardening | bool
+      notify: reload ssh
+
+    - name: Pre-seeded known_hosts
+      ansible.builtin.copy:
+        src: /etc/ssh/ssh_known_hosts
+        dest: /etc/ssh/ssh_known_hosts
+        mode: "0644"
+      when: inventory_hostname not in groups['controller']
+      ignore_errors: true   # only present after gen-known-hosts.sh ran on the anchor
+
+    - name: Full sshd config test before any reload
+      ansible.builtin.command: sshd -t
+      changed_when: false
+
+  handlers:
+    - name: reload ssh
+      ansible.builtin.service: {name: ssh, state: reloaded}

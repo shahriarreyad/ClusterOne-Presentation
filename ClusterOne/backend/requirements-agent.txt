@@ -1,0 +1,2 @@
+# Node agent (runs on each GPU node; the controller does not need this)
+psutil>=5.9

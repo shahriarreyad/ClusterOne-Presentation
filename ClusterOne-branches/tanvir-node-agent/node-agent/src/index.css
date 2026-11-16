@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+html {
+  font-size: 18px;
+}
+
+html, body {
+  background-color: #09090b;
+  color: #f4f4f5;
+  overflow-x: hidden;
+  max-width: 100vw;
+}

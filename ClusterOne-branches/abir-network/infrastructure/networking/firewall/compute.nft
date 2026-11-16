@@ -1,0 +1,65 @@
+#!/usr/sbin/nft -f
+# ClusterOne compute-node firewall (N4.4). Source of truth: reference/port-matrix.md
+#
+# Installed as /etc/nftables.conf (loaded at boot by nftables.service).
+# Deploy ONLY through scripts/apply-firewall.sh or the Ansible play — both keep an
+# automatic rollback timer, because a `policy drop` with no SSH accept locks you out.
+#
+# Only our own table is flushed (not `flush ruleset`), so fail2ban / Docker tables are
+# never wiped by a reload. Never persist with `nft list ruleset > /etc/nftables.conf`.
+
+define FABRIC = 10.42.0.0/24
+define ANCHOR = 10.42.0.10
+
+add table inet clusterone
+flush table inet clusterone
+
+table inet clusterone {
+
+  # Empty by default. scripts/bench-fw.sh adds a temporary accept here so iperf3 (5201)
+  # can be measured through the REAL firewall (N5) without a permanent hole.
+  chain bench { }
+
+  chain input {
+    type filter hook input priority filter; policy drop;
+
+    iif lo accept
+    ct state established,related accept
+    ct state invalid drop
+
+    # ICMP is the primary diagnostic on a cluster — never block it
+    ip protocol icmp accept
+    ip6 nexthdr icmpv6 accept
+
+    # management: anchor and node<->node (node<->node is required by torchrun/MPI)
+    ip saddr $FABRIC tcp dport 22 accept comment "ssh"
+
+    # slurm: controller drives slurmd; step ports between any fabric hosts
+    ip saddr $ANCHOR tcp dport 6818 accept comment "slurmd"
+    ip saddr $FABRIC tcp dport 60001-63000 accept comment "srun step ports"
+
+    # ClusterOne node agent — port TBC by Tanvir (port-matrix.md §3); keep in step with it
+    ip saddr $ANCHOR tcp dport 9500 accept comment "agent (TBC)"
+
+    # monitoring exporters — the anchor scrapes; nodes never scrape each other
+    ip saddr $ANCHOR tcp dport { 9100, 9400, 9115 } accept comment "exporters"
+
+    # distributed training, fabric only
+    ip saddr $FABRIC tcp dport 29400-29600 accept comment "torchrun rendezvous"
+    ip saddr $FABRIC tcp dport 32768-60999 accept comment "nccl data sockets"
+
+    # temporary benchmark hole (empty unless bench-fw.sh opened it)
+    ip saddr $FABRIC tcp dport 5201 jump bench
+
+    # log what we drop, rate-limited so a scan cannot fill the disk
+    limit rate 5/minute log prefix "nft-drop-in: " level info
+  }
+
+  chain forward {
+    type filter hook forward priority filter; policy drop;
+  }
+
+  chain output {
+    type filter hook output priority filter; policy accept;
+  }
+}

@@ -1,0 +1,18 @@
+# blackbox_exporter modules (anchor01, :9115). Install to /etc/prometheus/blackbox.yml
+modules:
+  icmp:
+    prober: icmp
+    timeout: 3s
+    icmp:
+      preferred_ip_protocol: ip4
+  tcp_ssh:
+    prober: tcp
+    timeout: 3s
+  dns_anchor:
+    prober: dns
+    timeout: 3s
+    dns:
+      query_name: gpu01.clusterone.internal
+      query_type: A
+      preferred_ip_protocol: ip4
+      valid_rcodes: [NOERROR]

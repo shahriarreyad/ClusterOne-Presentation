@@ -1,0 +1,7 @@
+# /etc/slurm/cgroup.conf on every node.
+# These three lines are what make allocations real: without ConstrainDevices a job could open any
+# /dev/nvidiaN on the node and share a GPU that Slurm gave to someone else.
+CgroupPlugin=autodetect
+ConstrainCores=yes
+ConstrainRAMSpace=yes
+ConstrainDevices=yes

@@ -1,0 +1,11 @@
+# /etc/slurm/gres.conf on each GPU node.
+
+# Preferred: Slurm detects the NVIDIA GPUs itself through NVML. Requires Slurm built with NVML
+# support (the Ubuntu/Debian `slurm-wlm` packages are not; build from source or use a repository
+# that ships NVML support) and the NVIDIA driver installed on the node.
+AutoDetect=nvml
+
+# Fallback when NVML autodetect is unavailable: declare the device files by hand.
+# One line per GPU; the count must match `Gres=gpu:N` for the node in slurm.conf.
+#Name=gpu File=/dev/nvidia0
+#Name=gpu File=/dev/nvidia1

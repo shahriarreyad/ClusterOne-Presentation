@@ -1,0 +1,29 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = [
+    "ignore:The anyio.abc.BlockingPortal alias is deprecated:DeprecationWarning",
+]
+
+[tool.ruff]
+line-length = 130
+extend-exclude = [".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = [
+    "B008",  # FastAPI's Depends()/Query() in argument defaults is the framework idiom
+    "UP007", "UP045",  # Optional[X] kept for consistency with the existing code base
+    "UP006", "UP035",  # typing.List/Dict kept for consistency with the existing code base
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E501", "B011"]
+"scripts/*" = ["E501"]
+"agent/*" = ["E501"]  # long PowerShell one-liner kept as originally written
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+check_untyped_defs = true
+plugins = ["pydantic.mypy"]
+exclude = ["^\\.venv/", "^agent/", "^tests/"]

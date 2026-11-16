@@ -1,0 +1,16 @@
+---
+# Repo path of infrastructure/networking, relative to the playbooks directory
+net_root: "{{ playbook_dir }}/../.."
+
+domain: clusterone.internal
+anchor_ip: 10.42.0.10
+fabric_cidr: 10.42.0.0/24
+
+# Egress on the anchor: open (N4) | allowlist (N8) | allowlist_temp_web (N8 + dated broad 80/443)
+egress_mode: allowlist_temp_web
+# The broad rule is dropped automatically after this date (see firewall/egress-allowlist.sh)
+egress_temp_web_until: "2026-12-31"
+
+# Enable only after every real login is in the group (see sshd_config.d/20-*.conf header)
+enable_ssh_hardening: false
+enable_qos: false

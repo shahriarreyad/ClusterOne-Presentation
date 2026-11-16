@@ -1,0 +1,15 @@
+# /etc/systemd/system/clusterone-qos@.service — enable per interface: systemctl enable --now clusterone-qos@eno1
+# Install the script to /usr/local/sbin/clusterone-qos.sh. Leaves nothing behind on stop.
+[Unit]
+Description=ClusterOne control-traffic QoS on %i
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/clusterone-qos.sh apply %i
+ExecStop=/usr/local/sbin/clusterone-qos.sh clear %i
+
+[Install]
+WantedBy=multi-user.target

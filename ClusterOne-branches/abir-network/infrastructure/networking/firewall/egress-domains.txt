@@ -1,0 +1,24 @@
+# Domains compute nodes may reach through the anchor NAT (N8.2).
+# One per line. firewall/egress-allowlist.sh resolves these to IPv4 and refreshes the nft set.
+# CDN-backed hosts rotate IPs, so a pure IP allowlist is brittle (that is why the systemd
+# timer re-resolves every 15 minutes, and why a domain-allowlist HTTP proxy is the N9+
+# recommendation — see POLICY.md §5). Anything added here is a policy change: PR + Zafor.
+
+# Ubuntu package mirrors
+archive.ubuntu.com
+security.ubuntu.com
+# Python
+pypi.org
+files.pythonhosted.org
+# Hugging Face
+huggingface.co
+cdn-lfs.huggingface.co
+cas-bridge.xethub.hf.co
+# PyTorch wheels
+download.pytorch.org
+# NVIDIA
+developer.download.nvidia.com
+# Source hosting (nccl-tests, pip git installs)
+github.com
+codeload.github.com
+objects.githubusercontent.com

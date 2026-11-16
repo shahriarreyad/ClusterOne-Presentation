@@ -1,0 +1,69 @@
+# Prometheus network alert rules (N6/N7). Add to rule_files in prometheus.yml on the anchor.
+# Validate: promtool check rules network-alerts.rules.yml
+# Metrics: node_exporter (:9100) and blackbox_exporter (:9115, icmp/tcp probes).
+groups:
+  - name: clusterone-network
+    rules:
+      - alert: NodeUnreachable
+        expr: probe_success{job="blackbox-icmp"} == 0
+        for: 2m
+        labels: {severity: critical}
+        annotations:
+          summary: "{{ $labels.instance }} does not answer ping for 2m"
+
+      - alert: FabricLinkDown
+        expr: node_network_up{device=~"eno2|eno1|bond0"} == 0 and on(instance) node_network_carrier{device=~"eno2|eno1|bond0"} == 0
+        for: 1m
+        labels: {severity: critical}
+        annotations:
+          summary: "{{ $labels.instance }} {{ $labels.device }} lost carrier"
+
+      - alert: LinkSpeedDegraded
+        # a 10G port negotiating 1G is a cable/SFP fault, not a config one
+        expr: node_network_speed_bytes{device=~"eno2|bond0"} > 0 and node_network_speed_bytes{device=~"eno2|bond0"} < 1.25e9
+        for: 5m
+        labels: {severity: warning}
+        annotations:
+          summary: "{{ $labels.instance }} {{ $labels.device }} below 10G"
+
+      - alert: NetworkErrors
+        expr: rate(node_network_receive_errs_total[5m]) + rate(node_network_transmit_errs_total[5m]) > 1
+        for: 5m
+        labels: {severity: warning}
+        annotations:
+          summary: "{{ $labels.instance }} {{ $labels.device }} error rate {{ $value | humanize }}/s"
+
+      - alert: NetworkDrops
+        expr: rate(node_network_receive_drop_total[5m]) + rate(node_network_transmit_drop_total[5m]) > 10
+        for: 5m
+        labels: {severity: warning}
+        annotations:
+          summary: "{{ $labels.instance }} {{ $labels.device }} dropping {{ $value | humanize }} pkts/s"
+
+      - alert: HighTcpRetransmits
+        expr: rate(node_netstat_Tcp_RetransSegs[5m]) / rate(node_netstat_Tcp_OutSegs[5m]) > 0.01
+        for: 10m
+        labels: {severity: warning}
+        annotations:
+          summary: "{{ $labels.instance }} retransmitting >1% of TCP segments"
+
+      - alert: ClockDrift
+        expr: abs(node_timex_offset_seconds) > 0.05
+        for: 5m
+        labels: {severity: warning}
+        annotations:
+          summary: "{{ $labels.instance }} clock off by {{ $value }}s (breaks logs, Slurm auth, NCCL timeouts)"
+
+      - alert: ConntrackNearFull
+        expr: node_nf_conntrack_entries / node_nf_conntrack_entries_limit > 0.8
+        for: 5m
+        labels: {severity: warning}
+        annotations:
+          summary: "{{ $labels.instance }} conntrack table >80% full (anchor NAT)"
+
+      - alert: DnsProbeFailing
+        expr: probe_success{job="blackbox-dns"} == 0
+        for: 2m
+        labels: {severity: critical}
+        annotations:
+          summary: "DNS on the anchor is not answering"

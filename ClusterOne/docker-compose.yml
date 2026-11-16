@@ -1,0 +1,46 @@
+# ClusterOne control plane in containers: the Core Cluster Engine API and the web UI.
+#
+#   docker compose up --build
+#   UI:  http://localhost:8080        API docs: http://localhost:8000/docs
+#
+# GPU nodes are NOT containers here. Run backend/agent/node_agent.py directly on each GPU PC
+# (it must see that machine's real GPU) and point it at this host:
+#   python node_agent.py --server http://<this-host-ip>:8000 --name gpu01
+#
+# Development mode by default. Settings come from the environment or a `.env` file next to this
+# file (see backend/.env.example for every CLUSTERONE_* name); for example:
+#   CLUSTERONE_AGENT_TOKEN=... CLUSTERONE_GPU_IDLE_THRESHOLD_PCT=60 docker compose up -d
+
+services:
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"          # node agents on other PCs connect here
+    environment:
+      CLUSTERONE_SLURM_ENABLED: ${CLUSTERONE_SLURM_ENABLED:-false}
+      CLUSTERONE_SLURMRESTD_URL: ${CLUSTERONE_SLURMRESTD_URL:-http://host.docker.internal:6820}
+      CLUSTERONE_SLURM_JWT_TOKEN_FILE: ${CLUSTERONE_SLURM_JWT_TOKEN_FILE:-}
+      CLUSTERONE_AGENT_TOKEN: ${CLUSTERONE_AGENT_TOKEN:-}
+      CLUSTERONE_API_KEY: ${CLUSTERONE_API_KEY:-}
+      CLUSTERONE_GPU_IDLE_THRESHOLD_PCT: ${CLUSTERONE_GPU_IDLE_THRESHOLD_PCT:-10}
+      CLUSTERONE_HEARTBEAT_TIMEOUT_SECONDS: ${CLUSTERONE_HEARTBEAT_TIMEOUT_SECONDS:-30}
+      CLUSTERONE_AUTH_ENABLED: ${CLUSTERONE_AUTH_ENABLED:-false}
+      CLUSTERONE_PROMETHEUS_URL: ${CLUSTERONE_PROMETHEUS_URL:-}
+      CLUSTERONE_CORS_ORIGINS: ${CLUSTERONE_CORS_ORIGINS:-http://localhost:8080,http://localhost:5173}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - clusterone-data:/data
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+
+volumes:
+  clusterone-data:

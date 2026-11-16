@@ -1,0 +1,14 @@
+# Private keys must never be committed (ssh-standard.md §2). Public keys are fine.
+id_*
+!id_*.pub
+*.pem
+*_key
+!*_key.pub
+*.key
+
+# host-specific / generated at deploy time
+firewall/clusterone-egress.nft
+ansible/*.retry
+ansible/.vault-pass
+*.swp
+.DS_Store

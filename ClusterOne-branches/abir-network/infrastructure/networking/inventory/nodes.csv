@@ -1,0 +1,10 @@
+# ClusterOne node inventory — the machine-readable source of truth (N0/N2).
+# Keep in sync with abir-network-docs/reference/ip-address-plan.md in the SAME commit:
+#   scripts/inventory-validate.sh checks both.
+# shortname,ip,role
+anchor01,10.42.0.10,controller
+gpu01,10.42.0.21,compute
+gpu02,10.42.0.22,compute
+gpu03,10.42.0.23,compute
+gpu04,10.42.0.24,compute
+gpu05,10.42.0.25,compute

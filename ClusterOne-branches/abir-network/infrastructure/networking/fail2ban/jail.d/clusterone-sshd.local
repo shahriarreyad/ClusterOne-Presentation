@@ -1,0 +1,9 @@
+# /etc/fail2ban/jail.d/clusterone-sshd.local — anchor01 only (campus-facing SSH) (N8)
+[sshd]
+enabled  = true
+backend  = systemd
+maxretry = 4
+findtime = 10m
+bantime  = 1h
+# never ban the fabric or loopback (a scripted node failing auth must not cut off the cluster)
+ignoreip = 127.0.0.1/8 10.42.0.0/24

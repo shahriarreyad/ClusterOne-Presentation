@@ -1,0 +1,76 @@
+name: Containers CI
+
+on:
+  pull_request:
+    branches: [develop, main]
+    paths:
+      - "containers/**"
+      - ".github/workflows/containers-ci.yml"
+  push:
+    branches: [develop]
+    paths:
+      - "containers/**"
+  workflow_dispatch:
+
+concurrency:
+  group: containers-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint PyTorch Dockerfile
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: containers/pytorch/Dockerfile
+          failure-threshold: error
+
+      - name: Lint TensorFlow Dockerfile
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: containers/tensorflow/Dockerfile
+          failure-threshold: error
+
+      - name: Lint shell scripts
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: ./containers
+
+  build-and-test:
+    needs: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        env: [pytorch, tensorflow]
+    steps:
+      - uses: actions/checkout@v4
+
+      # CUDA images are huge; free space so Docker build + .sif conversion fit.
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /opt/hostedtoolcache/CodeQL
+          df -h /
+
+      - name: Install Apptainer
+        uses: eWaterCycle/setup-apptainer@v2
+        with:
+          apptainer-version: 1.3.4
+
+      # Ubuntu 24.04 runners restrict unprivileged user namespaces, which Apptainer may need.
+      - name: Allow user namespaces
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
+
+      - name: Build image (Docker -> .sif)
+        run: bash containers/build.sh ${{ matrix.env }}
+
+      # No GPU on GitHub runners: CPU tests only.
+      - name: Test in Docker (CPU)
+        run: bash containers/tests/run_tests.sh ${{ matrix.env }} docker
+
+      - name: Test in Apptainer (CPU)
+        run: bash containers/tests/run_tests.sh ${{ matrix.env }} apptainer

@@ -1,0 +1,8 @@
+{
+  "iptables": false,
+  "ip-forward": false,
+  "ip6tables": false,
+  "userland-proxy": false,
+  "log-driver": "json-file",
+  "log-opts": { "max-size": "50m", "max-file": "3" }
+}

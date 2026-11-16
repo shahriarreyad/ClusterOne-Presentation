@@ -1,0 +1,37 @@
+---
+# N7 network tuning + optional QoS. Deploy only after scripts/tuning-ab.sh shows a gain.
+- name: Network tuning
+  hosts: cluster
+  tags: [tuning]
+  tasks:
+    - name: Kernel modules (bbr, fq, qos)
+      ansible.builtin.copy:
+        src: "{{ net_root }}/sysctl/modules-load-clusterone.conf"
+        dest: /etc/modules-load.d/clusterone.conf
+        mode: "0644"
+
+    - name: Load modules now
+      community.general.modprobe: {name: "{{ item }}", state: present}
+      loop: [tcp_bbr, sch_fq, sch_fq_codel]
+
+    - name: Tuning sysctls
+      ansible.builtin.copy:
+        src: "{{ net_root }}/sysctl/99-clusterone-net.conf"
+        dest: /etc/sysctl.d/99-clusterone-net.conf
+        mode: "0644"
+      notify: reload sysctl
+
+    - name: QoS script + unit
+      ansible.builtin.copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        mode: "{{ item.mode }}"
+      loop:
+        - {src: "{{ net_root }}/qos/clusterone-qos.sh", dest: /usr/local/sbin/clusterone-qos.sh, mode: "0755"}
+        - {src: "{{ net_root }}/qos/clusterone-qos@.service", dest: "/etc/systemd/system/clusterone-qos@.service", mode: "0644"}
+      when: enable_qos | bool
+
+  handlers:
+    - name: reload sysctl
+      ansible.builtin.command: sysctl --system
+      changed_when: true

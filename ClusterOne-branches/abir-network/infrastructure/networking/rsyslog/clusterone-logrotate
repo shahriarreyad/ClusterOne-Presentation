@@ -1,0 +1,14 @@
+# anchor01: /etc/logrotate.d/clusterone — 90-day retention of the central audit logs (N8)
+/var/log/clusterone/*/*.log {
+    daily
+    rotate 90
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 0640 syslog adm
+    sharedscripts
+    postrotate
+        /usr/lib/rsyslog/rsyslog-rotate || true
+    endscript
+}

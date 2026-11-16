@@ -1,0 +1,33 @@
+# N7.6 (optional) — 2x1GbE LACP bond on a compute node. NOT deployed by default.
+# Requires: a managed switch with LACP on both ports, and a second usable NIC.
+# Copy to netplan/<host>.yaml, adjust addresses, deploy with `netplan try`.
+#
+# Expect ~1.3–1.7x with NCCL_SOCKET_NTHREADS=4, not 2x: a single TCP flow still rides
+# one link (layer3+4 hashing spreads *flows*). Measure, then report what actually happened.
+# When bonded, NCCL_SOCKET_IFNAME follows automatically (profile.d detects the fabric IP).
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    eno1: {dhcp4: false, dhcp6: false, accept-ra: false, link-local: []}
+    enp3s0: {dhcp4: false, dhcp6: false, accept-ra: false, link-local: []}
+  bonds:
+    bond0:
+      interfaces: [eno1, enp3s0]
+      addresses: [10.42.0.21/24]
+      mtu: 9000
+      dhcp4: false
+      dhcp6: false
+      accept-ra: false
+      link-local: []
+      parameters:
+        mode: 802.3ad
+        lacp-rate: fast
+        mii-monitor-interval: 100
+        transmit-hash-policy: layer3+4
+      routes:
+        - to: default
+          via: 10.42.0.10
+      nameservers:
+        addresses: [10.42.0.10]
+        search: [clusterone.internal]

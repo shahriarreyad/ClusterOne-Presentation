@@ -1,0 +1,5 @@
+# Egress policy for N4: broad NAT egress so apt/pip/HF work while services are deployed.
+# N8 replaces this with the generated allowlist (firewall/egress-allowlist.sh).
+# Installed at /etc/nftables.d/clusterone-egress.nft — loaded by anchor.nft's include.
+flush chain inet clusterone egress_policy
+add rule inet clusterone egress_policy counter accept comment "N4 open NAT egress (replaced by allowlist in N8)"

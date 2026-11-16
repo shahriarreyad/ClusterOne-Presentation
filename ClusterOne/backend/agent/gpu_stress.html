@@ -1,0 +1,30 @@
+<!doctype html>
+<meta charset="utf-8"><title>GPU load test</title>
+<body style="font-family:sans-serif;padding:24px">
+<h2>ClusterOne GPU load test</h2>
+<p>Drag the slider to set how hard the GPU works. Compare Task Manager &rarr; Performance &rarr; GPU with the ClusterOne dashboard.</p>
+<label>Load: <b id="v">70</b>% <input id="s" type="range" min="0" max="100" value="70" style="width:300px"></label>
+<canvas id="c" width="64" height="64" style="display:block;margin-top:16px;border:1px solid #ccc"></canvas>
+<script>
+const gl = document.getElementById('c').getContext('webgl');
+const vs = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
+const fs = 'precision highp float;uniform float t;void main(){float a=t;for(int i=0;i<4000;i++){a=sin(a*1.0001+gl_FragCoord.x)*cos(a+gl_FragCoord.y);}gl_FragColor=vec4(a,a,a,1.);}';
+function sh(type, src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);return s;}
+const pr = gl.createProgram();
+gl.attachShader(pr, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, fs));
+gl.linkProgram(pr); gl.useProgram(pr);
+gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
+const loc = gl.getAttribLocation(pr,'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+const tl = gl.getUniformLocation(pr,'t');
+const s = document.getElementById('s'), v = document.getElementById('v');
+const q = new URLSearchParams(location.search); if (q.get('load')) { s.value = q.get('load'); v.textContent = s.value; }
+s.oninput = () => v.textContent = s.value;
+// Each 100 ms slot: keep the GPU busy for load% of it, idle for the rest.
+function frame(){
+  const slot = 100, busy = slot * s.value / 100, start = performance.now();
+  while (performance.now() - start < busy) { gl.uniform1f(tl, Math.random()); gl.drawArrays(gl.TRIANGLE_STRIP,0,4); gl.finish(); }
+  setTimeout(frame, slot - (performance.now() - start) > 0 ? slot - (performance.now() - start) : 0);
+}
+frame();
+</script>

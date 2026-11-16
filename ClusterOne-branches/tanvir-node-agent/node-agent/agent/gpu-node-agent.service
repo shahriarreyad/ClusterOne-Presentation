@@ -1,0 +1,26 @@
+[Unit]
+Description=ClusterOne GPU Cluster Node Telemetry Agent
+After=network.target nvidia-persistenced.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/opt/clusterone-agent
+Environment="CONTROLLER_URL=http://controller.cluster.local:3000"
+Environment="AGENT_AUTH_TOKEN=c1-node-secret-prod"
+Environment="TELEMETRY_INTERVAL=1.0"
+ExecStart=/usr/bin/python3 /opt/clusterone-agent/gpu_node_agent.py
+Restart=always
+RestartSec=5s
+KillMode=process
+LimitNOFILE=65536
+
+# Security hardening
+ProtectSystem=full
+ProtectHome=read-only
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

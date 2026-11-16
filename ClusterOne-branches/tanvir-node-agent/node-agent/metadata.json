@@ -1,0 +1,6 @@
+{
+  "name": "ClusterOne Observability Platform",
+  "description": "Industrial GPU Cluster Monitoring & Observability Platform: Real NVML telemetry ingestion, node agents, time-series history, and alert sentinels.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

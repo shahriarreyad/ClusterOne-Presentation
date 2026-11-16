@@ -1,0 +1,47 @@
+# Example slurm.conf fragment for ClusterOne (Slurm 23.11+ for REST v0.0.40).
+# Copy the relevant lines into /etc/slurm/slurm.conf on the anchor AND every GPU node
+# (the file must be identical everywhere). Adjust names, IPs, CPUs and memory to your hardware:
+# `slurmd -C` on a node prints the exact CPUs=/RealMemory= line for it.
+
+ClusterName=clusterone
+SlurmctldHost=c1-anchor                      # resolves to 10.20.0.10
+SlurmctldPort=6817
+SlurmdPort=6818
+
+# Authentication: munge for the cluster, JWT for slurmrestd (the ClusterOne backend).
+AuthType=auth/munge
+AuthAltTypes=auth/jwt
+AuthAltParameters=jwt_key=/var/spool/slurm/statesave/jwt_hs256.key   # chmod 0600, owner slurm
+
+# Confine every job to the CPUs, RAM and GPUs it was allocated.
+ProctrackType=proctrack/cgroup
+TaskPlugin=task/cgroup,task/affinity
+JobAcctGatherType=jobacct_gather/cgroup
+
+# Schedule individual cores + memory + GPUs (not whole nodes), so one node can host several jobs.
+SelectType=select/cons_tres
+SelectTypeParameters=CR_Core_Memory
+
+# GPUs are a countable resource. In the `gpu` partition they are handed out WHOLE and exclusively:
+# a GPU allocated to one job is invisible to every other job (see cgroup.conf: ConstrainDevices).
+GresTypes=gpu
+AccountingStorageType=accounting_storage/slurmdbd
+AccountingStorageTRES=gres/gpu
+
+ReturnToService=2                            # a node that came back (reboot, network) rejoins automatically
+SlurmdTimeout=120                            # seconds without contact before a node is set DOWN
+InactiveLimit=0
+
+# --- Compute nodes (one line per PC; add a line + restart slurmctld to grow the cluster) -----------
+# Keep some CPU/RAM for the owner's desktop: CPUSpecList reserves cores and MemSpecLimit (MB)
+# reserves RAM, and Slurm will never give them to a job.
+NodeName=gpu01 NodeAddr=10.20.0.21 CPUs=16 Sockets=1 CoresPerSocket=8 ThreadsPerCore=2 RealMemory=64000 \
+    MemSpecLimit=4096 CPUSpecList=14,15 Gres=gpu:1 State=UNKNOWN
+NodeName=gpu02 NodeAddr=10.20.0.22 CPUs=16 Sockets=1 CoresPerSocket=8 ThreadsPerCore=2 RealMemory=64000 \
+    MemSpecLimit=4096 CPUSpecList=14,15 Gres=gpu:1 State=UNKNOWN
+
+# --- Partitions -------------------------------------------------------------------------------------
+# OverSubscribe=NO (the default) keeps cores and GPUs exclusive to one job.
+PartitionName=gpu Nodes=gpu01,gpu02 Default=YES MaxTime=24:00:00 State=UP
+# The `teaching` partition (MPS sharing) is configured separately on its own nodes; do not mix it into `gpu`.
+#PartitionName=teaching Nodes=gpu05,gpu06 MaxTime=04:00:00 State=UP

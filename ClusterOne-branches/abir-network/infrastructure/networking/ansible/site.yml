@@ -1,0 +1,9 @@
+---
+# Order matters: DNS/time first, then SSH, then the firewall LAST (it can lock you out).
+# Run one play at a time on first use:  ansible-playbook site.yml --tags common --check --diff
+- import_playbook: playbooks/common.yml
+- import_playbook: playbooks/dns.yml
+- import_playbook: playbooks/ssh.yml
+- import_playbook: playbooks/tuning.yml
+- import_playbook: playbooks/hardening.yml
+- import_playbook: playbooks/firewall.yml

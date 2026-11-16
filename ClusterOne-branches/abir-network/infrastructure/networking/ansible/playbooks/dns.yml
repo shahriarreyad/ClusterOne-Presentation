@@ -1,0 +1,64 @@
+---
+# Name resolution, layer 1 + 2: generated /etc/hosts block everywhere, dnsmasq on the anchor (N2)
+- name: Generate hosts block (local)
+  hosts: localhost
+  connection: local
+  become: false
+  gather_facts: false
+  tags: [dns]
+  tasks:
+    - name: Render hosts block from inventory/nodes.csv
+      ansible.builtin.command: "{{ net_root }}/dns/hosts.generate.sh"
+      register: hosts_block
+      changed_when: false
+
+- name: /etc/hosts on all nodes
+  hosts: cluster
+  tags: [dns]
+  tasks:
+    - name: Managed block
+      ansible.builtin.blockinfile:
+        path: /etc/hosts
+        marker: "# {mark} CLUSTERONE"
+        block: "{{ hostvars['localhost'].hosts_block.stdout_lines | reject('match', '^# --- (BEGIN|END) CLUSTERONE') | join('\n') }}"
+
+- name: dnsmasq on the anchor
+  hosts: controller
+  tags: [dns]
+  tasks:
+    - name: Install dnsmasq
+      ansible.builtin.apt: {name: dnsmasq, state: present}
+
+    - name: Free port 53 from the systemd-resolved stub
+      ansible.builtin.copy:
+        src: "{{ net_root }}/dns/resolved-clusterone.conf"
+        dest: /etc/systemd/resolved.conf.d/clusterone.conf
+        mode: "0644"
+      notify: restart resolved
+
+    - name: dnsmasq config
+      ansible.builtin.copy:
+        src: "{{ net_root }}/dns/clusterone.conf"
+        dest: /etc/dnsmasq.d/clusterone.conf
+        mode: "0644"
+      notify: restart dnsmasq
+
+    - name: Plain hosts file for dnsmasq
+      ansible.builtin.command: "{{ net_root }}/dns/hosts.generate.sh -p"
+      delegate_to: localhost
+      become: false
+      register: plain_hosts
+      changed_when: false
+
+    - name: Install addn-hosts
+      ansible.builtin.copy:
+        content: "{{ plain_hosts.stdout }}\n"
+        dest: /etc/clusterone/hosts.dnsmasq
+        mode: "0644"
+      notify: restart dnsmasq
+
+  handlers:
+    - name: restart resolved
+      ansible.builtin.service: {name: systemd-resolved, state: restarted}
+    - name: restart dnsmasq
+      ansible.builtin.service: {name: dnsmasq, state: restarted, enabled: true}

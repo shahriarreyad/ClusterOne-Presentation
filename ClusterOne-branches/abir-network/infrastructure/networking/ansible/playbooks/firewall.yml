@@ -1,0 +1,78 @@
+---
+# Firewall LAST, one node at a time. A detached rollback timer is armed before the new ruleset
+# loads; the play then opens a FRESH connection, and only if that succeeds cancels the timer.
+# If the ruleset locked us out, the timer deletes our tables after 60 s and access returns.
+# (Interactive alternative: firewall/apply-firewall.sh, which waits for ENTER.)
+- name: Firewall
+  hosts: cluster
+  tags: [firewall]
+  serial: 1
+  vars:
+    fw_role: "{{ 'anchor' if inventory_hostname in groups['controller'] else 'compute' }}"
+  tasks:
+    - name: Egress policy bootstrap (anchor) — open, so anchor.nft's include always resolves
+      ansible.builtin.copy:
+        src: "{{ net_root }}/firewall/egress-open.nft"
+        dest: /etc/nftables.d/clusterone-egress.nft
+        mode: "0644"
+      when: fw_role == 'anchor'
+
+    - name: Stage ruleset
+      ansible.builtin.copy:
+        src: "{{ net_root }}/firewall/{{ fw_role }}.nft"
+        dest: "/etc/clusterone-{{ fw_role }}.nft.new"
+        mode: "0644"
+
+    - name: Syntax check
+      ansible.builtin.command: "nft -c -f /etc/clusterone-{{ fw_role }}.nft.new"
+      changed_when: false
+
+    - name: Arm detached rollback (60 s), then load
+      ansible.builtin.shell: |
+        set -e
+        setsid nohup bash -c 'sleep 60; nft delete table inet clusterone; nft delete table ip clusterone_nat' >/dev/null 2>&1 &
+        echo $! > /run/clusterone-fw-rollback.pid
+        nft -f /etc/clusterone-{{ fw_role }}.nft.new
+      args: {executable: /bin/bash}
+      changed_when: true
+
+    - name: Prove a fresh connection still works
+      ansible.builtin.wait_for_connection: {timeout: 30}
+      vars: {ansible_ssh_args: "-o ControlMaster=no -o ControlPath=none"}
+
+    - name: Disarm rollback and persist
+      ansible.builtin.shell: |
+        kill "$(cat /run/clusterone-fw-rollback.pid)"; rm -f /run/clusterone-fw-rollback.pid
+        install -m 0644 /etc/clusterone-{{ fw_role }}.nft.new /etc/nftables.conf
+        systemctl enable nftables
+      args: {executable: /bin/bash}
+      changed_when: true
+
+- name: Egress allowlist (anchor, N8)
+  hosts: controller
+  tags: [firewall, egress]
+  tasks:
+    - name: Install allowlist tooling
+      ansible.builtin.copy:
+        src: "{{ net_root }}/firewall/{{ item }}"
+        dest: "/opt/clusterone/{{ item }}"
+        mode: "0755"
+      loop: [egress-allowlist.sh, egress-domains.txt]
+      when: egress_mode != 'open'
+
+    - name: Build and load allowlist
+      ansible.builtin.command: >-
+        /opt/clusterone/egress-allowlist.sh
+        {{ '--temp-web-until ' ~ egress_temp_web_until if egress_mode == 'allowlist_temp_web' else '' }}
+      when: egress_mode != 'open'
+      changed_when: true
+
+    - name: Refresh every 15 min (CDN IPs rotate)
+      ansible.builtin.cron:
+        name: clusterone-egress-refresh
+        minute: "*/15"
+        job: >-
+          /opt/clusterone/egress-allowlist.sh
+          {{ '--temp-web-until ' ~ egress_temp_web_until if egress_mode == 'allowlist_temp_web' else '' }}
+          >/dev/null 2>&1
+        state: "{{ 'present' if egress_mode != 'open' else 'absent' }}"
